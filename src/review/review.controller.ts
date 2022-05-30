@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { CreateReviewDto } from './dto/createReview.dto';
 import { REVIEW_NOT_FOUND } from './review.conts';
-import { ReviewModel } from './review.model';
 import { ReviewService } from './review.service';
 
 class Leak {}

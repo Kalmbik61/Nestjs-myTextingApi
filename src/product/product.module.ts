@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypegooseModule } from 'nestjs-typegoose';
-import { AuthModel } from 'src/auth/auth.model';
 import { ProductController } from './product.controller';
 import { ProductModel } from './product.model';
 
