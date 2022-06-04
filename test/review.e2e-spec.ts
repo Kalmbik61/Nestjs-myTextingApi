@@ -3,8 +3,9 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { Types, disconnect } from 'mongoose';
-import { CreateReviewDto } from 'src/review/dto/createReview.dto';
-import { REVIEW_NOT_FOUND } from 'src/review/review.conts';
+import { CreateReviewDto } from '../src/review/dto/createReview.dto';
+import { REVIEW_NOT_FOUND } from '../src/review/review.conts';
+import { AuthDto } from '../src/auth/dto/auth.dto';
 
 const productId = new Types.ObjectId().toHexString();
 
@@ -16,9 +17,15 @@ const testDto: CreateReviewDto = {
   productId,
 };
 
+const user: AuthDto = {
+  login: 'sdf@dd.ru',
+  password: '1',
+};
+
 describe('AppController (e2e)', () => {
   let app: INestApplication;
   let createdId: string;
+  let accessToken: string;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -27,10 +34,15 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+
+    const { body } = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send(user);
+    accessToken = body.access_token;
   });
 
-  it('/review/create (POST) - success', async (done) => {
-    return request(app.getHttpServer())
+  it('/review/create (POST) - success', (done) => {
+    request(app.getHttpServer())
       .post('/review/create')
       .send(testDto)
       .expect(201)
@@ -41,8 +53,8 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  it('/review/create (POST) - fail', async (done) => {
-    return request(app.getHttpServer())
+  it('/review/create (POST) - fail', (done) => {
+    request(app.getHttpServer())
       .post('/review/create')
       .send({ ...testDto, rating: 0 })
       .expect(400)
@@ -51,9 +63,10 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  it('/review/byProduct/:productId (GET) - success', async (done) => {
-    return request(app.getHttpServer())
+  it('/review/byProduct/:productId (GET) - success', (done) => {
+    request(app.getHttpServer())
       .get('/review/byProduct/' + productId)
+      .set('Authorization', 'Bearer ' + accessToken)
       .expect(200)
       .then(({ body }: request.Response) => {
         expect(body.length).toBe(1);
@@ -61,9 +74,10 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  it('/review/byProduct/:productId (GET) - fail', async (done) => {
-    return request(app.getHttpServer())
+  it('/review/byProduct/:productId (GET) - fail', (done) => {
+    request(app.getHttpServer())
       .get('/review/byProduct/' + new Types.ObjectId().toHexString())
+      .set('Authorization', 'Bearer ' + accessToken)
       .expect(200)
       .then(({ body }: request.Response) => {
         expect(body.length).toBe(0);
@@ -72,20 +86,21 @@ describe('AppController (e2e)', () => {
   });
 
   it('/review/:id (DELETE) - success', () => {
-    return request(app.getHttpServer())
+    request(app.getHttpServer())
       .delete('/review/' + createdId)
+      .set('Authorization', 'Bearer ' + accessToken)
       .expect(200);
   });
 
   it('/review/:id (DELETE) - fail', () => {
-    return request(app.getHttpServer())
-      .delete('/review/' + new Types.ObjectId().toHexString())
+    request(app.getHttpServer())
+      .delete('/review/' + productId)
+      .set('Authorization', 'Bearer ' + accessToken)
       .expect(404, {
         statusCode: 404,
         message: REVIEW_NOT_FOUND,
       });
   });
-
   afterAll(() => {
     disconnect();
   });
