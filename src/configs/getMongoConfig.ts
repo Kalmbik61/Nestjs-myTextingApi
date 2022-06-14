@@ -22,7 +22,7 @@ const getMongoString = (configService: ConfigService) =>
   ':' +
   configService.get(ENV_MONGO.MONGO_PORT) +
   '/' +
-  configService.get(ENV_MONGO.MONGO_AUTH_DATAGASE);
+  configService.get(ENV_MONGO.MONGO_AUTH_DATABASE);
 
 // mongo other options
 const getMongoOptions = () => ({
