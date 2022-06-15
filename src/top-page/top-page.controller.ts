@@ -25,6 +25,7 @@ export class TopPageController {
   constructor(private readonly topPageService: TopPageService) {}
 
   @UseGuards(JwtAuthGuard)
+  @UsePipes(new ValidationPipe())
   @Post('create')
   async create(@Body() dto: TopPageDto) {
     return this.topPageService.create(dto);
@@ -59,6 +60,7 @@ export class TopPageController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @UsePipes(new ValidationPipe())
   @Patch(':id')
   async patch(@Param('id') id: string, @Body() dto: TopPageDto) {
     const page = await this.topPageService.updateById(id, dto);
@@ -73,5 +75,10 @@ export class TopPageController {
   @Post('find')
   async find(@Body() dto: FindTopPageDto) {
     return this.topPageService.findByCategory(dto.firstCat);
+  }
+
+  @Get('textSearch/:text')
+  async search(@Param('text') text: string) {
+    return this.topPageService.searchByText(text);
   }
 }
